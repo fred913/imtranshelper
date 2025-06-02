@@ -40,10 +40,12 @@ def draw_boxes_and_numbers(img, boxes, texts, base=1):
     return np.array(cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR))
 
 
-def ocr_and_mark(image_path: str | Image.Image | npt.NDArray | IO[bytes],
-                 check: Callable[[str], bool] = check_chinese,
-                 base=1) -> tuple[npt.NDArray, list[str]]:
-    ocr = CnOcr(det_model_name='db_resnet18')
+def ocr_and_mark(
+        image_path: str | Image.Image | npt.NDArray | IO[bytes],
+        check: Callable[[str], bool] = check_chinese,
+        base=1,
+        cnocr_kwargs: dict | None = None) -> tuple[npt.NDArray, list[str]]:
+    ocr = CnOcr(**(cnocr_kwargs or {}))
     if isinstance(image_path, str):
         img = np.array(cv2.imread(image_path))
     elif isinstance(image_path, Image.Image):
