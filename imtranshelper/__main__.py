@@ -1,7 +1,7 @@
 import cv2
 import typer
 
-from imtranshelper import ocr_and_mark
+from imtranshelper.core import ocr_and_mark
 
 
 def main(image_path: str = typer.Argument(...,
