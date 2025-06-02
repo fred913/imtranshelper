@@ -13,7 +13,7 @@ def check_chinese(text: str) -> bool:
     return bool(re.search(r'[\u4e00-\u9fff]', text))
 
 
-def draw_boxes_and_numbers(img, boxes, texts):
+def draw_boxes_and_numbers(img, boxes, texts, base=1):
     pil_img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(pil_img)
     try:
@@ -27,7 +27,7 @@ def draw_boxes_and_numbers(img, boxes, texts):
         # 画框
         draw.rectangle([x1, y1, x2, y2], outline='red', width=1)
         # 标号
-        number = str(idx + 1)
+        number = str(idx + base)
         # 获取文本的宽度和高度
         _, _, text_width, text_height = draw.textbbox((0, 0),
                                                       number,
@@ -40,10 +40,9 @@ def draw_boxes_and_numbers(img, boxes, texts):
     return np.array(cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR))
 
 
-def ocr_and_mark(
-    image_path,
-    check: Callable[[str],
-                    bool] = check_chinese) -> tuple[npt.NDArray, list[str]]:
+def ocr_and_mark(image_path,
+                 check: Callable[[str], bool] = check_chinese,
+                 base=1) -> tuple[npt.NDArray, list[str]]:
     ocr = CnOcr(det_model_name='db_resnet18')
     img = cv2.imread(image_path)
     res = ocr.ocr(image_path)
@@ -63,5 +62,5 @@ def ocr_and_mark(
                 box = [min(xs), min(ys), max(xs), max(ys)]
             cn_boxes.append(box)
 
-    marked_img = draw_boxes_and_numbers(img, cn_boxes, cn_texts)
+    marked_img = draw_boxes_and_numbers(img, cn_boxes, cn_texts, base=base)
     return marked_img, cn_texts
