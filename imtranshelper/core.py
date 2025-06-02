@@ -13,12 +13,12 @@ def check_chinese(text: str) -> bool:
     return bool(re.search(r'[\u4e00-\u9fff]', text))
 
 
-def draw_boxes_and_numbers(img, boxes, texts, base=1):
+def draw_boxes_and_numbers(img, boxes, texts, base=1, text_size=24):
     pil_img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(pil_img)
     try:
         # 使用较通用的字体
-        font = ImageFont.truetype("Arial Unicode.ttf", 24)
+        font = ImageFont.truetype("Arial Unicode.ttf", text_size)
     except Exception:
         font = ImageFont.load_default()
 
@@ -33,18 +33,20 @@ def draw_boxes_and_numbers(img, boxes, texts, base=1):
                                                       number,
                                                       font=font)
         # 画文本框
-        draw.rectangle([x1 - text_width - 5, y1, x1, y1 + text_height + 5],
+        draw.rectangle([x1 - text_width - 2, y1, x1, y1 + text_height + 2],
                        fill='red')
-        draw.text((x1 - text_width - 3, y1), number, fill='white', font=font)
+        draw.text((x1 - text_width - 1, y1), number, fill='white', font=font)
 
     return np.array(cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR))
 
 
 def ocr_and_mark(
-        image_path: str | Image.Image | npt.NDArray | IO[bytes],
-        check: Callable[[str], bool] = check_chinese,
-        base=1,
-        cnocr_kwargs: dict | None = None) -> tuple[npt.NDArray, list[str]]:
+    image_path: str | Image.Image | npt.NDArray | IO[bytes],
+    check: Callable[[str], bool] = check_chinese,
+    base=1,
+    cnocr_kwargs: dict | None = None,
+    text_size=24,
+) -> tuple[npt.NDArray, list[str]]:
     ocr = CnOcr(**(cnocr_kwargs or {}))
     if isinstance(image_path, str):
         img = np.array(cv2.imread(image_path))
@@ -72,5 +74,9 @@ def ocr_and_mark(
                 box = [min(xs), min(ys), max(xs), max(ys)]
             cn_boxes.append(box)
 
-    marked_img = draw_boxes_and_numbers(img, cn_boxes, cn_texts, base=base)
+    marked_img = draw_boxes_and_numbers(img,
+                                        cn_boxes,
+                                        cn_texts,
+                                        base=base,
+                                        text_size=text_size)
     return marked_img, cn_texts
